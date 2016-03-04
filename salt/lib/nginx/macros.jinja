@@ -1,4 +1,4 @@
-{% macro site(name, source, template=None) %}
+{% macro site(name, source, template='jinja') %}
 nginx_site_{{ name }}:
   file.managed:
     - name: /etc/nginx/sites-available/{{ name }}
@@ -27,9 +27,9 @@ nginx_site_{{ name }}_enable:
 {% macro htpasswd(name, filename, username, password) %}
 nginx_htpasswd_{{ name }}:
   webutil.user_exists:
-    - name: {{ username|yaml }}
-    - password: {{ password|yaml }}
-    - htpasswd_file: {{ filename|yaml }}
+    - name: {{ username|yaml_encode }}
+    - password: {{ password|yaml_encode }}
+    - htpasswd_file: {{ filename|yaml_encode }}
     - require:
       - pkg: nginx_apache2utils_package
     - watch_in:
