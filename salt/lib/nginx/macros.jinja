@@ -1,0 +1,37 @@
+{% macro site(name, source, template=None) %}
+nginx_site_{{ name }}:
+  file.managed:
+    - name: /etc/nginx/sites-available/{{ name }}
+    - source: {{ source }}
+    - user: root
+    - group: root
+    - mode: 644
+    {%- if template %}
+    - template: {{ template }}
+    {%- endif %}
+    - require:
+      - pkg: nginx_package
+    - watch_in:
+      - service: nginx_service
+
+nginx_site_{{ name }}_enable:
+  file.symlink:
+    - name: /etc/nginx/sites-enabled/{{ name }}
+    - target: ../sites-available/{{ name }}
+    - require:
+      - file: nginx_site_{{ name }}
+    - watch_in:
+      - service: nginx_service
+{% endmacro %}
+
+{% macro htpasswd(name, filename, username, password) %}
+nginx_htpasswd_{{ name }}:
+  webutil.user_exists:
+    - name: {{ username|yaml }}
+    - password: {{ password|yaml }}
+    - htpasswd_file: {{ filename|yaml }}
+    - require:
+      - pkg: nginx_apache2utils_package
+    - watch_in:
+      - service: nginx_service
+{% endmacro %}
