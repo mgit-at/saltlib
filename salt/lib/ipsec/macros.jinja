@@ -1,0 +1,36 @@
+{% macro transport(laddr, raddr, name='', psk=None) %}
+{% set cname = name|default('%s-%s'|format(laddr, raddr), true) %}
+ipsec_connection_{{ cname|replace('.', '_') }}:
+  file.managed:
+    - name: /etc/ipsec.d/conn/{{ cname }}.conf
+    - source: salt://lib/ipsec/conn.conf
+    - template: jinja
+    - context:
+        name: {{ cname|yaml_encode }}
+        laddr: {{ laddr|yaml_encode }}
+        raddr: {{ raddr|yaml_encode }}
+    - require:
+      - file: ipsec_conn_dir
+    - require_in:
+      - file: ipsec_conn_dir_clean
+    - watch_in:
+      - service: ipsec_service
+
+{% if psk %}
+ipsec_secret_{{ cname|replace('.', '_') }}:
+  file.managed:
+    - name: /etc/ipsec.d/secrets/{{ cname }}.secrets
+    - source: salt://lib/ipsec/conn.secrets
+    - template: jinja
+    - context:
+        laddr: {{ laddr|yaml_encode }}
+        raddr: {{ raddr|yaml_encode }}
+        key: {{ psk|yaml_encode }}
+    - require:
+      - file: ipsec_secrets_dir
+    - require_in:
+      - file: ipsec_secrets_dir_clean
+    - watch_in:
+      - service: ipsec_service
+{% endif %}
+{% endmacro %}
