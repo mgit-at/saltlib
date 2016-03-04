@@ -54,7 +54,7 @@ nginx_nodefault:
 
 nginx_override_service:
   file.managed:
-    - name: /etc/systemd/system/nginx.service.d/service.conf
+    - name: /etc/systemd/system/nginx.service.d/override.conf
     - makedirs: True
     - contents: "[Service]\nCPUAccounting=true\nSlice=service.slice\n"
     - require:
