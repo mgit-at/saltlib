@@ -1,0 +1,51 @@
+{% macro site(name, source, template='jinja') %}
+apache2_site_{{ name }}:
+  file.managed:
+    - name: /etc/apache2/sites-available/{{ name }}.conf
+    - source: {{ source }}
+    - user: root
+    - group: root
+    - mode: 644
+    {%- if template %}
+    - template: {{ template }}
+    {%- endif %}
+    - require:
+      - pkg: apache2_package
+    - watch_in:
+      - service: apache2_service
+
+apache2_site_{{ name }}_enable:
+  file.symlink:
+    - name: /etc/apache2/sites-enabled/{{ name }}.conf
+    - target: ../sites-available/{{ name }}.conf
+    - require:
+      - file: apache2_site_{{ name }}
+    - watch_in:
+      - service: apache2_service
+{% endmacro %}
+
+
+{% macro mod(name, pkg='') %}
+{% if pkg %}
+apache2_mod_{{ name }}_package:
+  pkg.installed:
+    - pkgs:
+      - {{ pkg }}
+    - install_recommends: False
+    - require:
+      - pkg: apache2_package
+    - watch_in:
+      - service: apache2_service
+{% endif %}
+
+apache2_mod_{{ name }}_enable:
+  file.symlink:
+    - name: /etc/apache2/mods-enabled/{{ name }}.load
+    - target: ../mods-available/{{ name }}.load
+    {%- if pkg %}
+    - require:
+      - pkg: apache2_mod_{{ name }}_package
+    {%- endif %}
+    - watch_in:
+      - service: apache2_service
+{% endmacro %}
