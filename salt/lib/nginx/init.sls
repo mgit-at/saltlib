@@ -56,7 +56,7 @@ nginx_override_service:
   file.managed:
     - name: /etc/systemd/system/nginx.service.d/override.conf
     - makedirs: True
-    - contents: "[Service]\nCPUAccounting=true\nSlice=service.slice\n"
+    - contents: "[Service]\nCPUAccounting=true\nSlice=service.slice\nLimitNOFILE=65535\n"
     - require:
       - pkg: nginx_package
     - watch_in:
